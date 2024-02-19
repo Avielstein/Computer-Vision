@@ -1,4 +1,4 @@
-# Advanced Computer Vision Techniques Repository
+#  Computer Vision
 
 Welcome to this curated collection of Jupyter notebooks, each demonstrating cutting-edge computer vision techniques with a focus on practical applications. 
 
