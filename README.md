@@ -1,6 +1,6 @@
 # Advanced Computer Vision Techniques Repository
 
-Welcome to this curated collection of Jupyter notebooks, each demonstrating cutting-edge computer vision techniques with a focus on practical applications. From understanding model predictions using Grad-CAM to specialized applications in agricultural image data, this repository serves as a comprehensive guide for enthusiasts and professionals alike.
+Welcome to this curated collection of Jupyter notebooks, each demonstrating cutting-edge computer vision techniques with a focus on practical applications. 
 
 ## Contents Overview
 
@@ -38,17 +38,4 @@ Welcome to this curated collection of Jupyter notebooks, each demonstrating cutt
   - Innovative method to visualize model learning and evolution.
   - Step-by-step guide to creating videos from image data.
 
-## Getting Started
 
-To dive into these notebooks:
-1. Clone this repository.
-2. Ensure Jupyter Notebook or JupyterLab is installed on your system.
-3. Navigate through each notebook, which combines markdown explanations with executable Python code cells.
-
-## Contribute
-
-Your contributions are welcome! If you have ideas for improvement, wish to add new examples, or want to refine existing notebooks, please feel free to fork this repository, make your changes, and submit a pull request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
