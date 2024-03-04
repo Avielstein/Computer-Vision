@@ -39,3 +39,15 @@ Welcome to this curated collection of Jupyter notebooks, each demonstrating cutt
   - Step-by-step guide to creating videos from image data.
 
 
+### 5. Feature Extraction From Floral and Fungi Footage
+
+#### Lecture
+[![Lecture](https://img.youtube.com/vi/Y8SaA25KlVk/0.jpg)](https://www.youtube.com/watch?v=Y8SaA25KlVk)
+
+#### Tomatos
+[![Tomato timelapse](https://img.youtube.com/vi/7TCIeCOCHMc/0.jpg)](https://www.youtube.com/watch?v=7TCIeCOCHMc)
+
+#### Mushrooms
+[![mushrooms detected](https://img.youtube.com/vi/zauNC9Wd6cg/0.jpg)](https://www.youtube.com/watch?v=zauNC9Wd6cg)
+
+
