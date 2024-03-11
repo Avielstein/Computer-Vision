@@ -18,11 +18,11 @@ Projects
 
 The project offers a holistic view of Grad-CAM's utility, combining foundational knowledge, sector-specific application, and innovative learning visualization to enhance model interpretability and application insight.
 
-[Basic Gradcam Usage](GradCam.ipynb)
-[Basic Gradcam Usage](GradCam.ipynb)
-[Basic Gradcam Usage](GradCam.ipynb)
+* [Basic Gradcam Usage](GradCam.ipynb)
+* [Custom CNN with GradCam](GradCamAgriculture/Veggi_Classification.ipynb)
+* [Generate Videos](GradCamAgriculture/VisualizeGradcamLearning.ipynb)
 
-![segmented](Felzenszwalb_seg.png "segmented")
+![gradCam](GradCamAgriculture/gradCamApplied.png "gradCam")
 
 
 ### 2\. Advanced Image Segmentation Techniques
