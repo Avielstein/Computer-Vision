@@ -39,8 +39,13 @@ The project offers a holistic view of Grad-CAM's utility, combining foundational
 **Description:** Features lectures and timelapse footage of flora and fungi, demonstrating feature extraction techniques from video data. Includes detailed analysis of time-lapse videos of tomatoes and mushrooms, offering practical insights into video-based data analysis.
 
 *   **Lecture on Feature Extraction:** [Watch Lecture](https://www.youtube.com/watch?v=7TCIeCOCHMc)
+[![Lecture](https://img.youtube.com/vi/7TCIeCOCHMc/0.jpg)](https://www.youtube.com/watch?v=7TCIeCOCHMc)
+
 *   **Tomato Time-lapse Analysis:** [Watch Tomato Timelapse](https://www.youtube.com/watch?v=Y8SaA25KlVk)
+[![Tomato timelapse](https://img.youtube.com/vi/Y8SaA25KlVk/0.jpg)](https://www.youtube.com/watch?v=Y8SaA25KlVk)
+
 *   **Mushroom Detection from Footage:** [Watch Mushroom Detection](https://www.youtube.com/watch?v=zauNC9Wd6cg)
+[![mushrooms detected](https://img.youtube.com/vi/zauNC9Wd6cg/0.jpg)](https://www.youtube.com/watch?v=zauNC9Wd6cg)
 
 
 
