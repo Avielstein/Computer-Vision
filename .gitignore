@@ -2,6 +2,9 @@
 GradCamAgriculture/AgriClassificationData/
 image_segmentation_images/
 grad_cam_images/
+MNISTMAX/mnist_preprocessed.npz
+MNISTMAX/models/
+MNISTMAX/results/
 
 # Keep only essential sample images, exclude large datasets
 faceblur/*.jpg
