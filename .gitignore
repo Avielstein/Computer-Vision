@@ -1,0 +1,84 @@
+# Dataset directories - these should be downloaded separately
+GradCamAgriculture/AgriClassificationData/
+image_segmentation_images/
+grad_cam_images/
+
+# Keep only essential sample images, exclude large datasets
+faceblur/*.jpg
+faceblur/*.png
+!faceblur/compare_zuck.jpg
+!faceblur/blurred_zuck.png
+!faceblur/gradCamApplied.png
+
+# Model files
+*.h5
+*.keras
+MyModel.keras
+
+# Generated outputs
+*.mp4
+gradcam_evolution.mp4
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Large result files
+*.pkl
+*.npy
+*.npz
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Log files
+*.log
+logs/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
