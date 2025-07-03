@@ -93,6 +93,34 @@ The project offers a holistic view of Grad-CAM's utility, combining foundational
 
 ![Blurred](faceblur/blurred_zuck.png "blured")
 
+### 5\. MNISTMAX: Advanced MNIST Learning Framework
+
+**Description:** A comprehensive framework demonstrating cutting-edge deep learning techniques on MNIST, featuring both contrastive learning and denoising autoencoders with live training visualization. Watch models learn in real-time through animated training progressions and achieve state-of-the-art performance on binary image denoising tasks.
+
+**Data Requirements:**
+- **Built-in Dataset:** Uses MNIST (automatically downloaded)
+- **No External Data:** Self-contained with TensorFlow/Keras
+- **Quick Setup:** Ready to run out of the box
+
+**Highlights:**
+
+1. **Live Training Visualization**: Watch models learn epoch-by-epoch with real-time denoising improvements
+2. **Advanced Architectures**: U-Net, ResNet, Attention-based, and Variational autoencoders
+3. **Efficient Training**: Optimized data pipelines with on-the-fly noise generation
+4. **Comprehensive Evaluation**: Multiple metrics including Dice coefficient and IoU scores
+
+**Quick Start:**
+```bash
+cd MNISTMAX/autoencoder_denoising
+python efficient_trainer.py --model basic --epochs 20 --live_viz --save_animation
+```
+
+[View Full Project](MNISTMAX/)
+
+![Training Animation](MNISTMAX/autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/training_animation.gif "Live Training Progress")
+
+*Watch the model learn to denoise MNIST digits in real-time - from random outputs to clean reconstructions!*
+
 ## Repository Structure
 
 ```
@@ -115,6 +143,13 @@ Computer-Vision/
 │       ├── train/
 │       ├── test/
 │       └── validation/
+├── MNISTMAX/
+│   ├── README.md
+│   ├── shared/ (common utilities)
+│   ├── contrastive_learning/ (unsupervised learning)
+│   ├── autoencoder_denoising/ (denoising with live viz)
+│   ├── mnist_analysis.ipynb
+│   └── logs/ (training results and animations)
 └── image_segmentation_images/ (create and add your images)
 ```
 
