@@ -8,6 +8,8 @@ Watch the model learn to denoise MNIST digits in real-time! This animation shows
 
 ![Training Animation](autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/training_animation.gif)
 
+![Denoising Results](autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/evaluation_samples.png)
+
 *The animation shows three MNIST digits (Clean | Noisy | Denoised) with the model's denoising ability improving dramatically from epoch 1 to 20.*
 
 ## 🏗️ Project Structure
