@@ -110,9 +110,9 @@ python efficient_trainer.py --model basic --epochs 20 --live_viz --save_animatio
 
 [View Full Project](MNISTMAX/)
 
-![Training Animation](MNISTMAX/autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/training_animation.gif "Live Training Progress")
+![Training Animation](MNISTMAX/results/training_animation.gif "Live Training Progress")
 
-![Denoising Results](MNISTMAX/autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/evaluation_samples.png "Final Denoising Results")
+![Denoising Results](MNISTMAX/results/evaluation_samples.png "Final Denoising Results")
 
 ## Repository Structure
 

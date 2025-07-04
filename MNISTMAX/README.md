@@ -6,9 +6,9 @@ A comprehensive framework for MNIST digit classification featuring both **contra
 
 Watch the model learn to denoise MNIST digits in real-time! This animation shows the progression from random outputs to clean reconstructions over 20 epochs:
 
-![Training Animation](autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/training_animation.gif)
+![Training Animation](results/training_animation.gif)
 
-![Denoising Results](autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/evaluation_samples.png)
+![Denoising Results](results/evaluation_samples.png)
 
 *The animation shows three MNIST digits (Clean | Noisy | Denoised) with the model's denoising ability improving dramatically from epoch 1 to 20.*
 
