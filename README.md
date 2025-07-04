@@ -102,13 +102,6 @@ The project offers a holistic view of Grad-CAM's utility, combining foundational
 - **No External Data:** Self-contained with TensorFlow/Keras
 - **Quick Setup:** Ready to run out of the box
 
-**Highlights:**
-
-1. **Live Training Visualization**: Watch models learn epoch-by-epoch with real-time denoising improvements
-2. **Advanced Architectures**: U-Net, ResNet, Attention-based, and Variational autoencoders
-3. **Efficient Training**: Optimized data pipelines with on-the-fly noise generation
-4. **Comprehensive Evaluation**: Multiple metrics including Dice coefficient and IoU scores
-
 **Quick Start:**
 ```bash
 cd MNISTMAX/autoencoder_denoising
@@ -118,8 +111,6 @@ python efficient_trainer.py --model basic --epochs 20 --live_viz --save_animatio
 [View Full Project](MNISTMAX/)
 
 ![Training Animation](MNISTMAX/autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/training_animation.gif "Live Training Progress")
-
-*Watch the model learn to denoise MNIST digits in real-time - from random outputs to clean reconstructions!*
 
 ## Repository Structure
 

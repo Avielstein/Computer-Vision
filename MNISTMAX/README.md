@@ -2,27 +2,13 @@
 
 A comprehensive framework for MNIST digit classification featuring both **contrastive learning** and **denoising autoencoders** with live training visualization.
 
-## 🎬 Visual Results
+## 🎬 Live Training Animation
 
-### Live Training Animation
 Watch the model learn to denoise MNIST digits in real-time! This animation shows the progression from random outputs to clean reconstructions over 20 epochs:
 
 ![Training Animation](autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/training_animation.gif)
 
 *The animation shows three MNIST digits (Clean | Noisy | Denoised) with the model's denoising ability improving dramatically from epoch 1 to 20.*
-
-### Training Performance
-![Training History](autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/training_history.png)
-
-### Final Results
-![Evaluation Samples](autoencoder_denoising/logs/efficient_basic_mixed_20250703_193742/evaluation_samples.png)
-
-**Key Achievements:**
-- 🎯 **96.5% Pixel Accuracy** on noisy MNIST digits
-- 📈 **84.4% Dice Coefficient** for overlap similarity
-- ⚡ **~25 seconds per epoch** with efficient data pipeline
-- 🎥 **Live visualization** during training
-- 🔄 **Real-time learning** with 1000 samples per epoch
 
 ## 🏗️ Project Structure
 
