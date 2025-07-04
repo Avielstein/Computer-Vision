@@ -8,9 +8,11 @@ Watch the model learn to denoise MNIST digits in real-time! This animation shows
 
 ![Training Animation](sample_data/training_animation.gif)
 
+![Comprehensive Noise Demo](sample_data/comprehensive_noise_animation.gif)
+
 ![Denoising Results](sample_data/evaluation_samples.png)
 
-*The animation shows three MNIST digits (Clean | Noisy | Denoised) with the model's denoising ability improving dramatically from epoch 1 to 20.*
+*The training animation shows three MNIST digits (Clean | Noisy | Denoised) with the model's denoising ability improving dramatically from epoch 1 to 20. The comprehensive demo shows 6 different digits with variable noise levels from 0.0 (clean) to 1.0 (maximum corruption) across 4 different noise types.*
 
 ## 🏗️ Project Structure
 
@@ -54,6 +56,19 @@ python efficient_trainer.py --model basic --epochs 20 --live_viz --save_animatio
 - 📊 Real-time metrics display
 - 🎬 Saves training animation GIF
 - ⚡ Fast training with ~1000 samples per epoch
+- 🎛️ Variable noise levels from 0.0 (clean) to 1.0 (maximum corruption)
+
+### 1a. Variable Noise Level Training
+
+Train with controllable noise intensity levels:
+
+```bash
+# Fixed noise intensity
+python efficient_trainer.py --model basic --variable_noise --noise_intensity 0.3 --epochs 20
+
+# Demo different noise levels
+python demo_variable_noise.py
+```
 
 ### 2. Advanced Model Training
 

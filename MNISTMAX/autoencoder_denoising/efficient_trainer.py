@@ -684,6 +684,10 @@ if __name__ == "__main__":
                        help='Save training animation showing denoising progress')
     parser.add_argument('--live_viz', action='store_true',
                        help='Show live visualization during training')
+    parser.add_argument('--variable_noise', action='store_true',
+                       help='Use variable noise levels (0.0 to 1.0 intensity)')
+    parser.add_argument('--noise_intensity', type=float, default=0.5,
+                       help='Fixed noise intensity (0.0-1.0) when using variable noise')
     
     args = parser.parse_args()
     

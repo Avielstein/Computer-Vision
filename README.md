@@ -112,6 +112,8 @@ python efficient_trainer.py --model basic --epochs 20 --live_viz --save_animatio
 
 ![Training Animation](MNISTMAX/sample_data/training_animation.gif "Live Training Progress")
 
+![Comprehensive Noise Animation](MNISTMAX/sample_data/comprehensive_noise_animation.gif "Variable Noise Levels Demo")
+
 ![Denoising Results](MNISTMAX/sample_data/evaluation_samples.png "Final Denoising Results")
 
 
