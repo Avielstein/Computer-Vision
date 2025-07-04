@@ -110,41 +110,10 @@ python efficient_trainer.py --model basic --epochs 20 --live_viz --save_animatio
 
 [View Full Project](MNISTMAX/)
 
-![Training Animation](MNISTMAX/results/training_animation.gif "Live Training Progress")
+![Training Animation](MNISTMAX/sample_data/training_animation.gif "Live Training Progress")
 
-![Denoising Results](MNISTMAX/results/evaluation_samples.png "Final Denoising Results")
+![Denoising Results](MNISTMAX/sample_data/evaluation_samples.png "Final Denoising Results")
 
-## Repository Structure
-
-```
-Computer-Vision/
-├── README.md
-├── .gitignore
-├── requirements.txt (recommended to create)
-├── image_segmentation.ipynb
-├── Felzenszwalb_seg.png
-├── faceblur/
-│   ├── faceblur.ipynb
-│   ├── blurred_zuck.png (sample output)
-│   └── [your test images here]
-├── GradCamAgriculture/
-│   ├── GradCam.ipynb
-│   ├── Veggi_Classification.ipynb
-│   ├── VisualizeGradcamLearning.ipynb
-│   ├── gradCamApplied.png
-│   └── AgriClassificationData/ (download separately)
-│       ├── train/
-│       ├── test/
-│       └── validation/
-├── MNISTMAX/
-│   ├── README.md
-│   ├── shared/ (common utilities)
-│   ├── contrastive_learning/ (unsupervised learning)
-│   ├── autoencoder_denoising/ (denoising with live viz)
-│   ├── mnist_analysis.ipynb
-│   └── logs/ (training results and animations)
-└── image_segmentation_images/ (create and add your images)
-```
 
 ## Contributing
 
