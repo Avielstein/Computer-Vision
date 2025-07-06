@@ -179,6 +179,11 @@ model, history = train_efficient_ablation_denoiser(
 
 *Auto-ablation noise generation showing different noise types at increasing intensities. Key principle: Only adding pixels, never removing existing signal pixels. Notice how `noisy_pixels ⊇ clean_pixels` always holds.*
 
+### Auto-Ablation Training Animation
+![Ablation Training Animation](../docs/images/ablation_training_animation.gif)
+
+*Watch the auto-ablation model learn to denoise over 10 epochs! Notice the conservative approach - the model only removes pixels, never adds them. The ablation constraint is mathematically enforced throughout training.*
+
 ### Auto-Ablation Denoising Results
 ![Ablation Evaluation Results](../docs/images/ablation_evaluation_samples.png)
 

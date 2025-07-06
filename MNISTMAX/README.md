@@ -19,7 +19,12 @@ A comprehensive framework for MNIST digit classification featuring both **contra
 
 *Auto-ablation noise generation: Only adding pixels, never removing them. Shows different noise types (Random Pixels, Block Noise, Gaussian Blobs, Mixed) at increasing intensities.*
 
-### Auto-Ablation Denoising Results (🆕 New!)
+### Auto-Ablation Training Animation (🆕 New!)
+![Ablation Training Animation](docs/images/ablation_training_animation.gif)
+
+*Watch the auto-ablation model learn to denoise over 10 epochs! Notice how it only removes pixels (conservative approach) and the ablation constraint in action.*
+
+### Auto-Ablation Denoising Results
 ![Ablation Denoising Results](docs/images/ablation_evaluation_samples.png)
 
 *Auto-ablation results with the constraint that models can only turn pixels OFF, never ON. Notice the more conservative, precision-focused approach.*
