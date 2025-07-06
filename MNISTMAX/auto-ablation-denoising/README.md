@@ -172,6 +172,18 @@ model, history = train_efficient_ablation_denoiser(
 - **Performance Comparison**: Ablation vs traditional denoising
 - **Architecture Testing**: Verify all models enforce constraints
 
+## 🎬 Visual Results
+
+### Auto-Ablation Denoising Results
+![Ablation Evaluation Results](../docs/images/ablation_evaluation_samples.png)
+
+*Auto-ablation denoising results showing clean, noisy, and denoised MNIST digits. Notice the conservative approach - the model only removes pixels, never adds them.*
+
+### Training Progress (30 Epochs)
+![Ablation Training History](../docs/images/ablation_training_history.png)
+
+*Training history showing stable improvement over 30 epochs with the enhanced loss function. Key achievement: No early plateau - the model continues learning throughout training.*
+
 ## 📈 Performance Characteristics
 
 ### ✅ Verified Results (30 epochs, improved loss function)

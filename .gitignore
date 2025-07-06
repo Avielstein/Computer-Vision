@@ -13,6 +13,11 @@ faceblur/*.png
 !faceblur/blurred_zuck.png
 !faceblur/gradCamApplied.png
 
+# Keep documentation images for GitHub display
+!MNISTMAX/docs/images/*.png
+!MNISTMAX/docs/images/*.gif
+!MNISTMAX/docs/images/*.jpg
+
 # Model files
 *.h5
 *.keras

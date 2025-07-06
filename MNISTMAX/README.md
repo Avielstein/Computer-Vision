@@ -2,17 +2,21 @@
 
 A comprehensive framework for MNIST digit classification featuring both **contrastive learning** and **denoising autoencoders** with live training visualization.
 
-## 🎬 Live Training Animation
+## 🎬 Visual Results Comparison
 
-Watch the model learn to denoise MNIST digits in real-time! This animation shows the progression from random outputs to clean reconstructions over 20 epochs:
+### Standard Autoencoder Denoising
+![Standard Denoising Results](docs/images/standard_evaluation_samples.png)
 
-![Training Animation](sample_data/training_animation.gif)
+*Standard autoencoder results showing clean, noisy, and denoised MNIST digits. The model can freely add or remove pixels during reconstruction.*
 
-![Comprehensive Noise Demo](sample_data/comprehensive_noise_animation.gif)
+### Auto-Ablation Denoising (🆕 New!)
+![Ablation Denoising Results](docs/images/ablation_evaluation_samples.png)
 
-![Denoising Results](sample_data/evaluation_samples.png)
+*Auto-ablation results showing the same process but with the constraint that models can only turn pixels OFF, never ON. Notice the more conservative, precision-focused approach.*
 
-*The training animation shows three MNIST digits (Clean | Noisy | Denoised) with the model's denoising ability improving dramatically from epoch 1 to 20. The comprehensive demo shows 6 different digits with variable noise levels from 0.0 (clean) to 1.0 (maximum corruption) across 4 different noise types.*
+![Ablation Training Progress](docs/images/ablation_training_history.png)
+
+*Training history showing 30 epochs of stable improvement with the enhanced loss function. No early plateau - the model continues learning throughout training.*
 
 ## 🏗️ Project Structure
 
