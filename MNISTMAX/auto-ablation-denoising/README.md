@@ -174,6 +174,11 @@ model, history = train_efficient_ablation_denoiser(
 
 ## 🎬 Visual Results
 
+### Ablation Noise Types
+![Ablation Noise Types](../docs/images/ablation_noise_types.png)
+
+*Auto-ablation noise generation showing different noise types at increasing intensities. Key principle: Only adding pixels, never removing existing signal pixels. Notice how `noisy_pixels ⊇ clean_pixels` always holds.*
+
 ### Auto-Ablation Denoising Results
 ![Ablation Evaluation Results](../docs/images/ablation_evaluation_samples.png)
 

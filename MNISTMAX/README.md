@@ -4,16 +4,27 @@ A comprehensive framework for MNIST digit classification featuring both **contra
 
 ## 🎬 Visual Results Comparison
 
-### Standard Autoencoder Denoising
+### Standard Autoencoder Training Animation
+![Standard Training Animation](docs/images/standard_training_animation.gif)
+
+*Watch the standard autoencoder learn to denoise MNIST digits over 20 epochs. The model can freely add or remove pixels during reconstruction.*
+
+### Standard Denoising Results
 ![Standard Denoising Results](docs/images/standard_evaluation_samples.png)
 
-*Standard autoencoder results showing clean, noisy, and denoised MNIST digits. The model can freely add or remove pixels during reconstruction.*
+*Standard autoencoder results showing clean, noisy, and denoised MNIST digits.*
 
-### Auto-Ablation Denoising (🆕 New!)
+### Auto-Ablation Noise Types
+![Ablation Noise Types](docs/images/ablation_noise_types.png)
+
+*Auto-ablation noise generation: Only adding pixels, never removing them. Shows different noise types (Random Pixels, Block Noise, Gaussian Blobs, Mixed) at increasing intensities.*
+
+### Auto-Ablation Denoising Results (🆕 New!)
 ![Ablation Denoising Results](docs/images/ablation_evaluation_samples.png)
 
-*Auto-ablation results showing the same process but with the constraint that models can only turn pixels OFF, never ON. Notice the more conservative, precision-focused approach.*
+*Auto-ablation results with the constraint that models can only turn pixels OFF, never ON. Notice the more conservative, precision-focused approach.*
 
+### Auto-Ablation Training Progress
 ![Ablation Training Progress](docs/images/ablation_training_history.png)
 
 *Training history showing 30 epochs of stable improvement with the enhanced loss function. No early plateau - the model continues learning throughout training.*
