@@ -155,21 +155,70 @@ def create_denoising_dataset(x_clean: np.ndarray,
     return dataset.prefetch(tf.data.AUTOTUNE)
 
 
-def save_representations(representations: np.ndarray, 
+def create_contrastive_pairs(x_data: np.ndarray,
+                           batch_size: int = 256,
+                           augmentation_fn=None) -> tf.data.Dataset:
+    """
+    Create contrastive pairs dataset for self-supervised learning.
+    
+    Args:
+        x_data: Input images
+        batch_size: Batch size
+        augmentation_fn: Augmentation function to create positive pairs
+        
+    Returns:
+        Dataset yielding (anchor, positive) pairs
+    """
+    def simple_augment(x):
+        """Simple augmentation that works in graph mode."""
+        # Add small amount of noise
+        noise = tf.random.normal(tf.shape(x), stddev=0.05)
+        augmented = tf.clip_by_value(x + noise, 0.0, 1.0)
+        
+        # Random horizontal flip (for variety)
+        if tf.random.uniform([]) > 0.5:
+            augmented = tf.image.flip_left_right(tf.expand_dims(augmented, -1))
+            augmented = tf.squeeze(augmented, -1)
+        
+        return augmented
+    
+    def augment_pair(x):
+        """Create augmented pair from single image."""
+        # Create two different augmented versions
+        anchor = simple_augment(x)
+        positive = simple_augment(x)
+        return anchor, positive
+    
+    # Create dataset
+    dataset = tf.data.Dataset.from_tensor_slices(x_data)
+    dataset = dataset.shuffle(buffer_size=10000)
+    
+    # Create pairs through augmentation
+    dataset = dataset.map(augment_pair, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    
+    return dataset
+
+
+def save_representations(embeddings: np.ndarray, 
                         labels: np.ndarray,
-                        filepath: str):
+                        images: np.ndarray,
+                        save_path: str):
     """
     Save learned representations to file.
     
     Args:
-        representations: Learned feature representations
+        embeddings: Learned feature representations
         labels: Corresponding labels
-        filepath: Path to save file
+        images: Original images
+        save_path: Path to save file
     """
-    np.savez_compressed(filepath, 
-                       representations=representations,
-                       labels=labels)
-    print(f"Representations saved to {filepath}")
+    np.savez_compressed(save_path, 
+                       embeddings=embeddings,
+                       labels=labels,
+                       images=images)
+    print(f"Representations saved to {save_path}")
 
 
 def load_representations(filepath: str) -> Tuple[np.ndarray, np.ndarray]:

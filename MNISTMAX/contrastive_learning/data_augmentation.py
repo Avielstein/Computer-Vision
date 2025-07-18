@@ -40,14 +40,18 @@ class ContrastiveAugmentation:
         # For MNIST, we'll use simple 90-degree rotations
         k = tf.random.uniform([], 0, 4, dtype=tf.int32)
         
-        # Add batch and channel dimensions
+        # Ensure image is 2D
+        if len(image.shape) > 2:
+            image = tf.squeeze(image)
+        
+        # Add batch and channel dimensions for tf.image.rot90
         image_4d = tf.expand_dims(tf.expand_dims(image, 0), -1)
         
         # Apply rotation
         rotated = tf.image.rot90(image_4d, k=k)
         
         # Remove batch and channel dimensions
-        return tf.squeeze(rotated, axis=[0, 3])
+        return tf.squeeze(rotated)
     
     def random_shift(self, image: tf.Tensor) -> tf.Tensor:
         """Apply random translation to image."""
@@ -224,3 +228,37 @@ def create_mild_augmentation() -> ContrastiveAugmentation:
         brightness_range=(0.8, 1.2),
         noise_factor=0.05
     )
+
+
+def create_augmentation_pipeline(strength: str = 'moderate'):
+    """
+    Create augmentation pipeline based on strength level.
+    
+    Args:
+        strength: Augmentation strength ('light', 'moderate', 'strong')
+        
+    Returns:
+        Augmentation function
+    """
+    if strength == 'light':
+        augmenter = ContrastiveAugmentation(
+            rotation_range=10.0,
+            width_shift_range=0.05,
+            height_shift_range=0.05,
+            zoom_range=0.05,
+            brightness_range=(0.9, 1.1),
+            noise_factor=0.02
+        )
+    elif strength == 'moderate':
+        augmenter = create_mild_augmentation()
+    elif strength == 'strong':
+        augmenter = create_simclr_augmentation()
+    else:
+        raise ValueError(f"Unknown augmentation strength: {strength}")
+    
+    def augment_fn(image):
+        """Apply augmentation to a single image."""
+        aug1, aug2 = augmenter.augment_pair(image)
+        return aug1  # Return just one augmented version
+    
+    return augment_fn
