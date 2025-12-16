@@ -33,7 +33,19 @@ This repository contains a comprehensive exploration of advanced computer vision
 - **Comprehensive evaluation**: Visual and quantitative metrics
 - **Animation generation**: Training progress and noise level comparisons
 
-### 4. **Auto-Ablation Studies**
+### 4. **Contrastive Pretrained Ablation Denoising** 🆕
+- **Architecture**: Contrastive pretrained encoder + ablation denoiser
+- **Pipeline**: Unsupervised contrastive pretraining → Transfer to denoising task
+- **Ablation Strategy**: Systematic pixel dropout patterns
+- **Performance**: Robust denoising with learned representations
+- **Visualization**: Side-by-side comparison of original, noisy, and denoised images
+
+#### Denoising Results:
+![Contrastive Ablation Denoising Comparison](docs/images/contrastive_ablation_denoising_comparison.png)
+
+*Shows the effectiveness of combining contrastive pretraining with ablation-based denoising. The pretrained encoder learns robust features that transfer well to the denoising task.*
+
+### 5. **Auto-Ablation Studies**
 - **Systematic architecture exploration**: Different layer configurations
 - **Automated hyperparameter tuning**: Learning rates, batch sizes, epochs
 - **Performance tracking**: Loss curves and accuracy metrics
