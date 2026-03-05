@@ -90,3 +90,8 @@ logs/
 .idea/
 *.swp
 *.swo
+
+# FaceScan-Studio (Node/Vite)
+FaceScan-Studio/node_modules/
+FaceScan-Studio/dist/
+FaceScan-Studio/.vite/
