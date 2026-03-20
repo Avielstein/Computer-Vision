@@ -63,9 +63,14 @@ export function Preview3D({ landmarks, partVisibility }: Props) {
         camera={{ position: [0, 0, 2.5], fov: 45 }}
         style={{ borderRadius: 12 }}
       >
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[2, 2, 2]} intensity={1.2} />
-        <directionalLight position={[-2, -1, -1]} intensity={0.3} />
+        {/* Lower ambient so shadows reveal surface detail */}
+        <ambientLight intensity={0.25} />
+        {/* Main key light — slightly off-axis to cast shading across nose/brow ridge */}
+        <directionalLight position={[1.5, 2, 3]} intensity={1.4} />
+        {/* Rim light from the other side to separate face from background */}
+        <directionalLight position={[-2, 0.5, 1]} intensity={0.6} />
+        {/* Soft fill from below to open up chin/neck shadows */}
+        <directionalLight position={[0, -2, 1]} intensity={0.25} />
         <FaceMeshObject landmarks={landmarks} partVisibility={partVisibility} />
         <OrbitControls enablePan={false} minDistance={1} maxDistance={5} />
       </Canvas>

@@ -6,6 +6,8 @@ import { PartToggles } from './components/PartToggles';
 import { useRecorder } from './hooks/useRecorder';
 import { DEFAULT_PART_VISIBILITY } from './types';
 import type { QualityState, RecordFrame, PartVisibility } from './types';
+import { buildPrintableBust } from './lib/meshBuilder';
+import { exportSTL } from './lib/exportSTL';
 
 export default function App() {
   const [quality, setQuality] = useState<QualityState>('lost');
@@ -17,6 +19,12 @@ export default function App() {
   }, []);
 
   const recorder = useRecorder(captureFrame);
+
+  const handleExportSTL = useCallback(() => {
+    if (!recorder.smoothedLandmarks) return;
+    const geometry = buildPrintableBust(recorder.smoothedLandmarks);
+    exportSTL(geometry, 'face-bust.stl');
+  }, [recorder.smoothedLandmarks]);
 
   return (
     <div style={styles.root}>
@@ -48,6 +56,11 @@ export default function App() {
             onChange={setPartVisibility}
             disabled={!recorder.smoothedLandmarks}
           />
+          {recorder.state === 'done' && (
+            <button onClick={handleExportSTL} style={styles.exportBtn}>
+              ⬇ Export STL for 3D Printing
+            </button>
+          )}
         </section>
       </main>
     </div>
@@ -101,5 +114,16 @@ const styles: Record<string, React.CSSProperties> = {
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
     color: '#666',
+  },
+  exportBtn: {
+    padding: '10px 20px',
+    background: 'linear-gradient(135deg, #818cf8, #c084fc)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    alignSelf: 'flex-start',
   },
 };

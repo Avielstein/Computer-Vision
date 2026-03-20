@@ -2,6 +2,16 @@ export type FacePart = 'leftEye' | 'rightEye' | 'leftBrow' | 'rightBrow' | 'nose
 
 export type QualityState = 'lost' | 'ok' | 'good';
 
+export type PoseLabel = 'neutral' | 'left' | 'right' | 'up' | 'down';
+
+export interface PoseCoverage {
+  neutral: boolean;
+  left: boolean;
+  right: boolean;
+  up: boolean;
+  down: boolean;
+}
+
 export interface RecordFrame {
   landmarks: number[][];  // 468 × [x, y, z]
   timestamp: number;
