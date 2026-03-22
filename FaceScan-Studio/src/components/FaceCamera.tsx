@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import type React from 'react';
 import { useCamera } from '../hooks/useCamera';
 import { useFaceMesh } from '../hooks/useFaceMesh';
 import type { QualityState } from '../types';
@@ -12,11 +13,12 @@ const QUALITY_LABEL: Record<QualityState, { text: string; color: string }> = {
 interface Props {
   onQualityChange?: (q: QualityState) => void;
   onFaceMeshReady?: (captureFrame: () => import('../types').RecordFrame | null) => void;
+  videoRef?: React.RefObject<HTMLVideoElement | null>;
 }
 
-export function FaceCamera({ onQualityChange, onFaceMeshReady }: Props) {
+export function FaceCamera({ onQualityChange, onFaceMeshReady, videoRef: externalVideoRef }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { videoRef, ready, error } = useCamera();
+  const { videoRef, ready, error } = useCamera(externalVideoRef);
   const { quality, captureFrame } = useFaceMesh(videoRef, canvasRef, ready);
 
   // Propagate captureFrame ref upward once ready

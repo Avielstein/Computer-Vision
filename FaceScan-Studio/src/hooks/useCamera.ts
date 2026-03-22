@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import type React from 'react';
 
-export function useCamera() {
-  const videoRef = useRef<HTMLVideoElement>(null);
+export function useCamera(externalVideoRef?: React.RefObject<HTMLVideoElement | null>) {
+  const ownRef = useRef<HTMLVideoElement>(null);
+  const videoRef = (externalVideoRef as React.RefObject<HTMLVideoElement> | undefined) ?? ownRef;
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

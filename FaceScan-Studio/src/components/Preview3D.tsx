@@ -1,8 +1,9 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { buildFaceMesh } from '../lib/meshBuilder';
+import { hullMaterial } from '../lib/bustMeshMerger';
 import type { PartVisibility } from '../types';
 import { PART_INDICES } from '../lib/faceParts';
 
@@ -28,24 +29,68 @@ function FaceMeshObject({ landmarks, partVisibility }: FaceMeshObjectProps) {
     });
   }, [partVisibility, materials, partNames]);
 
-  // Slow auto-rotate until user interacts
+  return <mesh ref={meshRef} geometry={geometry} material={materials} />;
+}
+
+interface BustSceneProps {
+  landmarks: number[][];
+  partVisibility: PartVisibility;
+  bustGeometry: THREE.BufferGeometry;
+}
+
+function BustScene({ landmarks, partVisibility, bustGeometry }: BustSceneProps) {
+  const groupRef = useRef<THREE.Group>(null);
+  const hullMat = useMemo(() => hullMaterial(), []);
+
+  useFrame((_, delta) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * 0.3;
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      <FaceMeshObject landmarks={landmarks} partVisibility={partVisibility} />
+      <mesh geometry={bustGeometry} material={hullMat} />
+    </group>
+  );
+}
+
+interface FaceOnlySceneProps {
+  landmarks: number[][];
+  partVisibility: PartVisibility;
+}
+
+function FaceOnlyScene({ landmarks, partVisibility }: FaceOnlySceneProps) {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  const { geometry, materials, partNames } = useMemo(() => {
+    return buildFaceMesh(landmarks);
+  }, [landmarks]);
+
+  useEffect(() => {
+    materials.forEach((mat, i) => {
+      const name = partNames[i] as keyof PartVisibility;
+      mat.visible = partVisibility[name] ?? true;
+    });
+  }, [partVisibility, materials, partNames]);
+
   useFrame((_, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.3;
     }
   });
 
-  return (
-    <mesh ref={meshRef} geometry={geometry} material={materials} />
-  );
+  return <mesh ref={meshRef} geometry={geometry} material={materials} />;
 }
 
 interface Props {
   landmarks: number[][] | null;
   partVisibility: PartVisibility;
+  bustGeometry?: THREE.BufferGeometry | null;
 }
 
-export function Preview3D({ landmarks, partVisibility }: Props) {
+export function Preview3D({ landmarks, partVisibility, bustGeometry }: Props) {
   if (!landmarks) {
     return (
       <div style={styles.placeholder}>
@@ -63,15 +108,19 @@ export function Preview3D({ landmarks, partVisibility }: Props) {
         camera={{ position: [0, 0, 2.5], fov: 45 }}
         style={{ borderRadius: 12 }}
       >
-        {/* Lower ambient so shadows reveal surface detail */}
         <ambientLight intensity={0.25} />
-        {/* Main key light — slightly off-axis to cast shading across nose/brow ridge */}
         <directionalLight position={[1.5, 2, 3]} intensity={1.4} />
-        {/* Rim light from the other side to separate face from background */}
         <directionalLight position={[-2, 0.5, 1]} intensity={0.6} />
-        {/* Soft fill from below to open up chin/neck shadows */}
         <directionalLight position={[0, -2, 1]} intensity={0.25} />
-        <FaceMeshObject landmarks={landmarks} partVisibility={partVisibility} />
+        {bustGeometry ? (
+          <BustScene
+            landmarks={landmarks}
+            partVisibility={partVisibility}
+            bustGeometry={bustGeometry}
+          />
+        ) : (
+          <FaceOnlyScene landmarks={landmarks} partVisibility={partVisibility} />
+        )}
         <OrbitControls enablePan={false} minDistance={1} maxDistance={5} />
       </Canvas>
       <p style={styles.hint}>Drag to rotate · Scroll to zoom</p>
