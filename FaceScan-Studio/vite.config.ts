@@ -10,6 +10,6 @@ export default defineConfig({
     format: 'es',
   },
   optimizeDeps: {
-    exclude: ['@mediapipe/face_mesh', '@mediapipe/camera_utils'],
+    exclude: ['@mediapipe/face_mesh', '@mediapipe/camera_utils', '@huggingface/transformers'],
   },
 })

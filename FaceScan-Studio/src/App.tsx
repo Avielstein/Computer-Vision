@@ -1,24 +1,31 @@
 import { useState, useRef, useCallback } from 'react';
-import { FaceCamera } from './components/FaceCamera';
-import { RecordControls } from './components/RecordControls';
+import { FaceCamera, type OverlayMode } from './components/FaceCamera';
 import { BustScanControls } from './components/BustScanControls';
-import { Preview3D } from './components/Preview3D';
-import { PartToggles } from './components/PartToggles';
-import { useRecorder } from './hooks/useRecorder';
+import { Preview3D, type RenderMode } from './components/Preview3D';
 import { useBustRecorder } from './hooks/useBustRecorder';
 import { useSegmentation } from './hooks/useSegmentation';
-import { DEFAULT_PART_VISIBILITY } from './types';
-import type { QualityState, RecordFrame, PartVisibility } from './types';
-import { buildPrintableBust } from './lib/meshBuilder';
+import type { QualityState, RecordFrame } from './types';
 import { exportSTL } from './lib/exportSTL';
 
-type AppMode = 'face' | 'bust';
+const RENDER_MODES: { mode: RenderMode; label: string }[] = [
+  { mode: 'mono',      label: 'Mono'    },
+  { mode: 'depth',     label: 'Depth'   },
+  { mode: 'segmented', label: 'Regions' },
+  { mode: 'texture',   label: 'Texture' },
+];
+
+const OVERLAY_MODES: { mode: OverlayMode; label: string }[] = [
+  { mode: 'none',       label: 'Off'        },
+  { mode: 'regions',    label: 'Regions'    },
+  { mode: 'confidence', label: 'Confidence' },
+  { mode: 'mesh',       label: 'Mesh'       },
+];
 
 export default function App() {
-  const [mode, setMode] = useState<AppMode>('face');
-  const [quality, setQuality] = useState<QualityState>('lost');
-  const [cameraReady, setCameraReady] = useState(false);
-  const [partVisibility, setPartVisibility] = useState<PartVisibility>(DEFAULT_PART_VISIBILITY);
+  const [quality,      setQuality]      = useState<QualityState>('lost');
+  const [cameraReady,  setCameraReady]  = useState(false);
+  const [renderMode,   setRenderMode]   = useState<RenderMode>('mono');
+  const [overlayMode,  setOverlayMode]  = useState<OverlayMode>('regions');
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const captureFrameRef = useRef<(() => RecordFrame | null) | null>(null);
@@ -28,54 +35,30 @@ export default function App() {
   }, []);
 
   const segmentation = useSegmentation(videoRef, cameraReady);
-  const recorder = useRecorder(captureFrame);
-  const bustRecorder = useBustRecorder(captureFrame, segmentation.captureMask);
+  const bustRecorder = useBustRecorder(
+    captureFrame,
+    segmentation.captureMask,
+    segmentation.captureColorFrame,
+    videoRef,
+  );
 
   const handleQualityChange = useCallback((q: QualityState) => {
     setQuality(q);
     setCameraReady(q !== 'lost');
   }, []);
 
-  // Face-only STL export
-  const handleExportFaceSTL = useCallback(() => {
-    if (!recorder.smoothedLandmarks) return;
-    const geometry = buildPrintableBust(recorder.smoothedLandmarks);
-    exportSTL(geometry, 'face-bust.stl');
-  }, [recorder.smoothedLandmarks]);
-
-  // Full bust STL export
-  const handleExportBustSTL = useCallback(() => {
+  const handleExportSTL = useCallback(() => {
     if (!bustRecorder.bustGeometry) return;
-    exportSTL(bustRecorder.bustGeometry, 'full-bust.stl');
+    exportSTL(bustRecorder.bustGeometry, 'bust.stl');
   }, [bustRecorder.bustGeometry]);
 
-  const displayLandmarks = mode === 'bust'
-    ? (bustRecorder.faceLandmarks ?? recorder.smoothedLandmarks)
-    : recorder.smoothedLandmarks;
-
-  const bustGeometry = mode === 'bust' ? bustRecorder.bustGeometry : null;
+  const displayLandmarks = bustRecorder.faceLandmarks;
 
   return (
     <div style={styles.root}>
       <header style={styles.header}>
-        <div style={styles.headerLeft}>
-          <h1 style={styles.title}>FaceScan Studio</h1>
-          <span style={styles.subtitle}>Real-time face segmentation &amp; 3D scanning</span>
-        </div>
-        <div style={styles.modeToggle}>
-          <button
-            style={{ ...styles.modeBtn, ...(mode === 'face' ? styles.modeBtnActive : {}) }}
-            onClick={() => setMode('face')}
-          >
-            Face Scan
-          </button>
-          <button
-            style={{ ...styles.modeBtn, ...(mode === 'bust' ? styles.modeBtnActive : {}) }}
-            onClick={() => setMode('bust')}
-          >
-            Full Bust
-          </button>
-        </div>
+        <h1 style={styles.title}>FaceScan Studio</h1>
+        <span style={styles.subtitle}>3D bust scanning</span>
       </header>
 
       <main style={styles.main}>
@@ -86,12 +69,20 @@ export default function App() {
             videoRef={videoRef}
             onQualityChange={handleQualityChange}
             onFaceMeshReady={fn => { captureFrameRef.current = fn; }}
+            overlayMode={overlayMode}
           />
-          {mode === 'face' ? (
-            <RecordControls recorder={recorder} quality={quality} />
-          ) : (
-            <BustScanControls recorder={bustRecorder} quality={quality} />
-          )}
+          <div style={styles.modeRow}>
+            {OVERLAY_MODES.map(({ mode, label }) => (
+              <button
+                key={mode}
+                style={{ ...styles.modeBtn, ...(overlayMode === mode ? styles.modeBtnActive : {}) }}
+                onClick={() => setOverlayMode(mode)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <BustScanControls recorder={bustRecorder} quality={quality} />
         </section>
 
         {/* Right panel: 3D preview + controls */}
@@ -99,31 +90,30 @@ export default function App() {
           <h2 style={styles.panelTitle}>3D Preview</h2>
           <Preview3D
             landmarks={displayLandmarks}
-            partVisibility={partVisibility}
-            bustGeometry={bustGeometry}
+            bustGeometry={bustRecorder.bustGeometry}
+            renderMode={renderMode}
           />
-          <PartToggles
-            visibility={partVisibility}
-            onChange={setPartVisibility}
-            disabled={!displayLandmarks}
-          />
-          <div style={styles.exportRow}>
-            {mode === 'face' && recorder.state === 'done' && (
-              <button onClick={handleExportFaceSTL} style={styles.exportBtn}>
-                ⬇ Export Face STL
+          <div style={styles.modeRow}>
+            {RENDER_MODES.map(({ mode, label }) => (
+              <button
+                key={mode}
+                style={{
+                  ...styles.modeBtn,
+                  ...(renderMode === mode ? styles.modeBtnActive : {}),
+                }}
+                onClick={() => setRenderMode(mode)}
+              >
+                {label}
               </button>
-            )}
-            {mode === 'bust' && bustRecorder.phase === 'done' && bustRecorder.bustGeometry && (
-              <button onClick={handleExportBustSTL} style={styles.exportBtn}>
-                ⬇ Export Full Bust STL
-              </button>
-            )}
-            {mode === 'bust' && bustRecorder.faceLandmarks && (
-              <button onClick={handleExportFaceSTL} style={{ ...styles.exportBtn, ...styles.exportBtnSecondary }}>
-                ⬇ Face Only STL
-              </button>
-            )}
+            ))}
           </div>
+          {bustRecorder.phase === 'done' && bustRecorder.bustGeometry && (
+            <div style={styles.exportRow}>
+              <button onClick={handleExportSTL} style={styles.exportBtn}>
+                ⬇ Export Bust STL
+              </button>
+            </div>
+          )}
         </section>
       </main>
     </div>
@@ -142,11 +132,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '20px 32px 12px',
     borderBottom: '1px solid #1a1a2a',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerLeft: {
-    display: 'flex',
     alignItems: 'baseline',
     gap: 16,
   },
@@ -161,28 +146,6 @@ const styles: Record<string, React.CSSProperties> = {
   subtitle: {
     fontSize: 13,
     color: '#555',
-  },
-  modeToggle: {
-    display: 'flex',
-    gap: 4,
-    background: '#1a1a2a',
-    padding: 4,
-    borderRadius: 10,
-  },
-  modeBtn: {
-    padding: '6px 18px',
-    borderRadius: 7,
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: 13,
-    fontWeight: 600,
-    background: 'transparent',
-    color: '#666',
-    transition: 'all 0.15s',
-  },
-  modeBtnActive: {
-    background: 'linear-gradient(135deg, #818cf8, #c084fc)',
-    color: '#fff',
   },
   main: {
     flex: 1,
@@ -205,10 +168,29 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: '0.08em',
     color: '#666',
   },
+  modeRow: {
+    display: 'flex',
+    gap: 6,
+  },
+  modeBtn: {
+    padding: '5px 14px',
+    borderRadius: 6,
+    border: '1px solid #2a2a3a',
+    background: '#0d0d15',
+    color: '#555',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    letterSpacing: '0.04em',
+  },
+  modeBtnActive: {
+    border: '1px solid #818cf8',
+    color: '#818cf8',
+    background: '#1a1a2a',
+  },
   exportRow: {
     display: 'flex',
     gap: 8,
-    flexWrap: 'wrap',
   },
   exportBtn: {
     padding: '10px 20px',
@@ -219,10 +201,5 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     fontWeight: 600,
     cursor: 'pointer',
-  },
-  exportBtnSecondary: {
-    background: '#1a1a2a',
-    color: '#818cf8',
-    border: '1px solid #818cf8',
   },
 };

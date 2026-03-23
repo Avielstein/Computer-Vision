@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import type React from 'react';
 import { useCamera } from '../hooks/useCamera';
-import { useFaceMesh } from '../hooks/useFaceMesh';
+import { useFaceMesh, type OverlayMode } from '../hooks/useFaceMesh';
 import type { QualityState } from '../types';
 
 const QUALITY_LABEL: Record<QualityState, { text: string; color: string }> = {
@@ -10,16 +10,19 @@ const QUALITY_LABEL: Record<QualityState, { text: string; color: string }> = {
   lost: { text: 'No Face',      color: '#f87171' },
 };
 
+export type { OverlayMode };
+
 interface Props {
   onQualityChange?: (q: QualityState) => void;
   onFaceMeshReady?: (captureFrame: () => import('../types').RecordFrame | null) => void;
-  videoRef?: React.RefObject<HTMLVideoElement | null>;
+  videoRef?:        React.RefObject<HTMLVideoElement | null>;
+  overlayMode?:     OverlayMode;
 }
 
-export function FaceCamera({ onQualityChange, onFaceMeshReady, videoRef: externalVideoRef }: Props) {
+export function FaceCamera({ onQualityChange, onFaceMeshReady, videoRef: externalVideoRef, overlayMode }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { videoRef, ready, error } = useCamera(externalVideoRef);
-  const { quality, captureFrame } = useFaceMesh(videoRef, canvasRef, ready);
+  const { quality, captureFrame } = useFaceMesh(videoRef, canvasRef, ready, overlayMode);
 
   // Propagate captureFrame ref upward once ready
   if (ready && onFaceMeshReady) onFaceMeshReady(captureFrame);

@@ -2,9 +2,6 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import type { QualityState, RecordFrame } from '../types';
 import { PART_INDICES, PART_COLORS } from '../lib/faceParts';
 
-// MediaPipe tesselation triangles — imported at runtime from the CDN bundle.
-// We load the face_mesh script dynamically to avoid Vite bundling issues.
-
 declare global {
   interface Window {
     FaceMesh: new (config: object) => FaceMeshInstance;
@@ -27,9 +24,11 @@ interface FaceMeshResults {
   multiFaceLandmarks?: Array<Array<{ x: number; y: number; z: number }>>;
 }
 
+export type OverlayMode = 'none' | 'regions' | 'confidence' | 'mesh';
+
 export interface FaceMeshState {
-  quality: QualityState;
-  landmarks: number[][] | null;  // 468 × [x, y, z] normalized
+  quality:      QualityState;
+  landmarks:    number[][] | null;
   captureFrame: () => RecordFrame | null;
 }
 
@@ -39,24 +38,116 @@ function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
     const s = document.createElement('script');
-    s.src = src;
-    s.crossOrigin = 'anonymous';
+    s.src = src; s.crossOrigin = 'anonymous';
     s.onload = () => resolve();
     s.onerror = reject;
     document.head.appendChild(s);
   });
 }
 
+// ─── Draw helpers ─────────────────────────────────────────────────────────────
+
+function drawRegions(
+  ctx: CanvasRenderingContext2D,
+  lms: Array<{ x: number; y: number; z: number }>,
+  w: number, h: number,
+) {
+  // Skin base
+  const skinPts = PART_INDICES.skin.map(i => [lms[i].x * w, lms[i].y * h]);
+  ctx.beginPath();
+  ctx.moveTo(skinPts[0][0], skinPts[0][1]);
+  skinPts.forEach(([x, y]) => ctx.lineTo(x, y));
+  ctx.closePath();
+  ctx.fillStyle = PART_COLORS.skin;
+  ctx.fill();
+
+  // Named parts
+  const parts = ['rightEye', 'leftEye', 'rightBrow', 'leftBrow', 'nose', 'lips'] as const;
+  parts.forEach(part => {
+    const pts = PART_INDICES[part].map(i => [lms[i].x * w, lms[i].y * h]);
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    pts.forEach(([x, y]) => ctx.lineTo(x, y));
+    ctx.closePath();
+    ctx.fillStyle = PART_COLORS[part];
+    ctx.fill();
+    ctx.strokeStyle = PART_COLORS[part].replace(/[\d.]+\)$/, '0.9)');
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+}
+
+function drawConfidence(
+  ctx: CanvasRenderingContext2D,
+  lms: Array<{ x: number; y: number; z: number }>,
+  w: number, h: number,
+) {
+  // z ≈ 0 = frontal (green / high confidence); |z| > 0.08 = side (red / low)
+  for (const lm of lms) {
+    const px = lm.x * w, py = lm.y * h;
+    const conf = Math.max(0, 1 - Math.abs(lm.z) / 0.08);
+    const r = Math.round((1 - conf) * 255);
+    const g = Math.round(conf * 200);
+    const grad = ctx.createRadialGradient(px, py, 0, px, py, 5);
+    grad.addColorStop(0, `rgba(${r},${g},60,0.55)`);
+    grad.addColorStop(1, `rgba(${r},${g},60,0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawMesh(
+  ctx: CanvasRenderingContext2D,
+  lms: Array<{ x: number; y: number; z: number }>,
+  w: number, h: number,
+) {
+  const tess = window.FACEMESH_TESSELATION;
+  if (tess) {
+    ctx.strokeStyle = 'rgba(129,140,248,0.3)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    for (const [a, b] of tess) {
+      const la = lms[a], lb = lms[b];
+      if (!la || !lb) continue;
+      ctx.moveTo(la.x * w, la.y * h);
+      ctx.lineTo(lb.x * w, lb.y * h);
+    }
+    ctx.stroke();
+  }
+  const oval = window.FACEMESH_FACE_OVAL;
+  if (oval) {
+    ctx.strokeStyle = 'rgba(192,132,252,0.75)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (const [a, b] of oval) {
+      const la = lms[a], lb = lms[b];
+      if (!la || !lb) continue;
+      ctx.moveTo(la.x * w, la.y * h);
+      ctx.lineTo(lb.x * w, lb.y * h);
+    }
+    ctx.stroke();
+  }
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export function useFaceMesh(
-  videoRef: React.RefObject<HTMLVideoElement | null>,
-  canvasRef: React.RefObject<HTMLCanvasElement | null>,
-  cameraReady: boolean
+  videoRef:    React.RefObject<HTMLVideoElement | null>,
+  canvasRef:   React.RefObject<HTMLCanvasElement | null>,
+  cameraReady: boolean,
+  overlayMode: OverlayMode = 'regions',
 ): FaceMeshState {
-  const faceMeshRef = useRef<FaceMeshInstance | null>(null);
-  const animRef = useRef<number>(0);
-  const landmarksRef = useRef<number[][] | null>(null);
-  const [quality, setQuality] = useState<QualityState>('lost');
+  const faceMeshRef    = useRef<FaceMeshInstance | null>(null);
+  const animRef        = useRef<number>(0);
+  const landmarksRef   = useRef<number[][] | null>(null);
+  const overlayModeRef = useRef<OverlayMode>(overlayMode);
+  const [quality,   setQuality]   = useState<QualityState>('lost');
   const [landmarks, setLandmarks] = useState<number[][] | null>(null);
+
+  // Keep ref in sync so the onResults closure always sees the current mode
+  useEffect(() => { overlayModeRef.current = overlayMode; }, [overlayMode]);
 
   const drawOverlay = useCallback(
     (lms: Array<{ x: number; y: number; z: number }>, canvas: HTMLCanvasElement) => {
@@ -64,37 +155,17 @@ export function useFaceMesh(
       if (!ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const w = canvas.width, h = canvas.height;
-
-      // Draw skin base (filled oval)
-      const skinPts = PART_INDICES.skin.map(i => [lms[i].x * w, lms[i].y * h]);
-      ctx.beginPath();
-      ctx.moveTo(skinPts[0][0], skinPts[0][1]);
-      skinPts.forEach(([x, y]) => ctx.lineTo(x, y));
-      ctx.closePath();
-      ctx.fillStyle = PART_COLORS.skin;
-      ctx.fill();
-
-      // Draw each named part as a filled convex hull (simple polygon)
-      const parts = ['rightEye', 'leftEye', 'rightBrow', 'leftBrow', 'nose', 'lips'] as const;
-      parts.forEach(part => {
-        const pts = PART_INDICES[part].map(i => [lms[i].x * w, lms[i].y * h]);
-        ctx.beginPath();
-        ctx.moveTo(pts[0][0], pts[0][1]);
-        pts.forEach(([x, y]) => ctx.lineTo(x, y));
-        ctx.closePath();
-        ctx.fillStyle = PART_COLORS[part];
-        ctx.fill();
-        ctx.strokeStyle = PART_COLORS[part].replace(/[\d.]+\)$/, '0.9)');
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      });
+      const mode = overlayModeRef.current;
+      if (mode === 'none') return;
+      if (mode === 'regions')    drawRegions(ctx, lms, w, h);
+      if (mode === 'confidence') drawConfidence(ctx, lms, w, h);
+      if (mode === 'mesh')       drawMesh(ctx, lms, w, h);
     },
-    []
+    [],
   );
 
   useEffect(() => {
     if (!cameraReady) return;
-
     let destroyed = false;
 
     async function init() {

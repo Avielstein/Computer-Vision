@@ -42,6 +42,8 @@ export interface SegmentationState {
   ready: boolean;
   /** Capture a segmentation mask from the current video frame. Returns null if not ready. */
   captureMask: () => Promise<{ mask: Uint8Array; width: number; height: number } | null>;
+  /** Capture the current video frame as a transferable ImageBitmap. Returns null if video not ready. */
+  captureColorFrame: () => Promise<ImageBitmap | null>;
 }
 
 const MASK_SIZE = 256; // internal resolution for segmentation masks
@@ -115,8 +117,15 @@ export function useSegmentation(
     });
   }, [videoRef]);
 
+  const captureColorFrame = useCallback(async (): Promise<ImageBitmap | null> => {
+    const video = videoRef.current;
+    if (!video || video.readyState < 2) return null;
+    return createImageBitmap(video, 0, 0, video.videoWidth || 640, video.videoHeight || 480);
+  }, [videoRef]);
+
   return {
     ready: readyRef.current,
     captureMask,
+    captureColorFrame,
   };
 }

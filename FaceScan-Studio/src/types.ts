@@ -38,13 +38,17 @@ export const EMPTY_BUST_COVERAGE: BustAngleCoverage = {
 };
 
 export interface BustCaptureFrame extends RecordFrame {
-  mask:   Uint8Array;
-  maskW:  number;
-  maskH:  number;
+  mask:          Uint8Array;
+  maskW:         number;
+  maskH:         number;
   /** 3×3 rotation matrix (row-major): head-space → camera-space */
-  R:      number[];
+  R:             number[];
   /** 3-vector translation */
-  t:      number[];
+  t:             number[];
+  /** Raw video frame captured at this angle — transferred to worker for depth inference */
+  colorBitmap?:  ImageBitmap;
+  /** Which bust angle this frame was captured at (for selective re-scan) */
+  angle?:        BustAngleLabel;
 }
 
 export interface PartVisibility {

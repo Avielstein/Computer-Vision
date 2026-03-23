@@ -5,6 +5,7 @@ interface Props {
   currentAngle: BustAngleLabel | null;
   pendingPct:   number; // 0-1
   size?:        number;
+  onRescan?:    (angle: BustAngleLabel) => void;
 }
 
 // 8 horizontal angles + up/down — layout on a circle
@@ -24,7 +25,7 @@ const TOP_BOTTOM: { label: BustAngleLabel; symbol: string; yOffset: number }[] =
   { label: 'down', symbol: '↓', yOffset:  1 },
 ];
 
-export function BustAngleRadar({ coverage, currentAngle, pendingPct, size = 120 }: Props) {
+export function BustAngleRadar({ coverage, currentAngle, pendingPct, size = 120, onRescan }: Props) {
   const cx = size / 2;
   const cy = size / 2;
   const r  = size * 0.36;
@@ -46,8 +47,13 @@ export function BustAngleRadar({ coverage, currentAngle, pendingPct, size = 120 
         const stroke  = conf ? '#4ade80' : active ? '#fbbf24' : '#222';
         const dotR    = 10;
 
+        const clickable = conf && !!onRescan;
         return (
-          <g key={label}>
+          <g
+            key={label}
+            onClick={clickable ? () => onRescan!(label) : undefined}
+            style={{ cursor: clickable ? 'pointer' : 'default' }}
+          >
             {/* Pending arc for active angle */}
             {active && pendingPct > 0 && (
               <circle
@@ -59,6 +65,10 @@ export function BustAngleRadar({ coverage, currentAngle, pendingPct, size = 120 
                 strokeLinecap="round"
                 transform={`rotate(-90 ${x} ${y})`}
               />
+            )}
+            {/* Re-scan hint ring on confirmed angles */}
+            {clickable && (
+              <circle cx={x} cy={y} r={dotR + 4} fill="none" stroke="#4ade8044" strokeWidth={1} strokeDasharray="2 2" />
             )}
             <circle cx={x} cy={y} r={dotR} fill={color + '22'} stroke={stroke} strokeWidth={1.5} />
             <text

@@ -9,8 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mediapipe/face_mesh": "^0.4.1633559619",
+    "@huggingface/transformers": "^3.8.1",
     "@mediapipe/camera_utils": "^0.3.1632415268",
+    "@mediapipe/face_mesh": "^0.4.1633559619",
     "@react-three/drei": "^9.92.7",
     "@react-three/fiber": "^8.15.19",
     "react": "^18.2.0",
