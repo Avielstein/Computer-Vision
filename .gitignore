@@ -22,6 +22,12 @@ faceblur/*.png
 *.h5
 *.keras
 MyModel.keras
+*.pt
+
+# LingBotVisionNav — cloned upstream package, downloaded weights, generated outputs
+LingBotVisionNav/third_party/
+LingBotVisionNav/outputs/
+LingBotVisionNav/data/frames/
 
 # Generated outputs
 *.mp4

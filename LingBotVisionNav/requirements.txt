@@ -1,0 +1,16 @@
+# LingBotVisionNav — extra deps on top of the repo-root requirements.txt.
+# The upstream backbone package itself is installed by ./setup.sh
+# (pip install -e third_party/lingbot-vision), which pulls torch/torchvision.
+
+torch>=2.0
+torchvision
+omegaconf
+huggingface_hub
+# torch 2.2.x is built against numpy 1.x; opencv 5 pulls numpy 2 and breaks it.
+# Pin both to the numpy<2 world (also what the repo's TensorFlow expects).
+numpy<2
+opencv-python-headless>=4.6.0,<5
+scikit-learn>=1.1.0
+Pillow>=9.0.0
+imageio>=2.9.0
+matplotlib>=3.5.0

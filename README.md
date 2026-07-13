@@ -117,6 +117,27 @@ python efficient_trainer.py --model basic --epochs 20 --live_viz --save_animatio
 ![Denoising Results](MNISTMAX/sample_data/evaluation_samples.png "Final Denoising Results")
 
 
+### 6\. LingBotVisionNav: Navigation Sandbox on a Boundary-Centric Foundation Model
+
+**Description:** A sandbox for probing [LingBot-Vision](https://github.com/robbyant/lingbot-vision) — Robbyant / Ant Group's open-source *boundary-centric* vision foundation model (self-supervised ViT backbones pretrained with masked boundary modeling) — for capabilities relevant to **robot navigation**. Unlike semantic-invariant backbones, its frozen dense patch features stay spatially structured, making them strong for dense prediction. This project builds thin wrappers + demos on the frozen ViT-S/16 (CPU / Apple Silicon friendly) covering dense-feature PCA visualization, one-shot query object detection, unsupervised object proposals (KMeans), training-free point tracking, and a free-space / traversability steering cue.
+
+**Data Requirements:**
+- **Model Weights:** Auto-downloaded from Hugging Face on first run (~86 MB for the small variant), cached under `~/.cache/huggingface`
+- **Test Images:** Ships with the upstream sample image; drop your own in `LingBotVisionNav/data/` (and frame sequences in `data/frames/` for tracking)
+- **No External Dataset:** Self-contained
+
+**Quick Start:**
+```bash
+cd LingBotVisionNav
+./setup.sh                                   # clone upstream backbone + install deps
+python demos.py pca    --input data/example.png
+python demos.py detect --input data/example.png --xy 256 256
+python demos.py nav    --input data/example.png
+```
+
+[View Full Project](LingBotVisionNav/)
+
+
 ## Contributing
 
 When contributing to this repository:
