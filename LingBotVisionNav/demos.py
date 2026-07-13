@@ -6,7 +6,6 @@ GIF) panel into ``outputs/``.
     python demos.py pca      --input data/example.png
     python demos.py detect   --input data/example.png --xy 256 256
     python demos.py cluster  --input data/example.png --k 6
-    python demos.py nav      --input data/example.png
     python demos.py track    --frames data/frames --xy 256 256
 
 Defaults target CPU / Apple Silicon with the small variant. Pass
@@ -23,7 +22,6 @@ import numpy as np
 
 import lbv_nav
 from lbv_nav import features as F
-from lbv_nav import navigation as NAV
 from lbv_nav import object_discovery as OD
 from lbv_nav import tracking as TR
 
@@ -81,28 +79,6 @@ def cmd_cluster(bb, args):
     _save("cluster.png", _panel(blend, boxed, labels=[f"k={args.k} segments", "proposals"]))
 
 
-def cmd_nav(bb, args):
-    feats = bb.dense_features(args.input, size=args.size, mode=args.mode)
-    free, sim = NAV.free_space_mask(feats, sim_thresh=args.thresh)
-    clearance = NAV.obstacle_columns(free)
-    plan = NAV.steer_suggestion(clearance)
-    H, W = feats.rgb.shape[:2]
-    free_up = F.upsample(free.astype(np.float32), (H, W), smooth=False)
-    overlay = feats.rgb.copy()
-    green = np.zeros_like(overlay); green[..., 1] = 255
-    m = free_up > 0.5
-    overlay[m] = (0.5 * overlay[m] + 0.5 * green[m]).astype(np.uint8)
-    # draw clearance profile + steer arrow
-    for x in range(W):
-        cx = int(x / W * len(clearance))
-        y = int(H - clearance[min(cx, len(clearance) - 1)] * H)
-        cv2.line(overlay, (x, H), (x, y), (255, 255, 0), 1)
-    tip = int((plan["offset"] * 0.5 + 0.5) * W)
-    cv2.arrowedLine(overlay, (W // 2, H - 10), (tip, H - 60), (0, 0, 255), 3, tipLength=0.3)
-    print(f"[demos] nav plan: action={plan['action']} offset={plan['offset']:+.2f} clearance={plan['clearance']:.2f}")
-    _save("nav.png", _panel(feats.rgb, overlay, labels=["input", f"free-space | {plan['action']}"]))
-
-
 def cmd_track(bb, args):
     import glob
 
@@ -152,11 +128,6 @@ def main():
     p.set_defaults(fn=cmd_cluster)
     p.add_argument("--input", default="data/example.png")
     p.add_argument("--k", type=int, default=6)
-
-    p = sub.add_parser("nav", help="free-space / traversability cue + steer")
-    p.set_defaults(fn=cmd_nav)
-    p.add_argument("--input", default="data/example.png")
-    p.add_argument("--thresh", type=float, default=0.6)
 
     p = sub.add_parser("track", help="training-free point tracking across frames")
     p.set_defaults(fn=cmd_track)

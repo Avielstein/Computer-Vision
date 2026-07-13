@@ -119,7 +119,7 @@ python efficient_trainer.py --model basic --epochs 20 --live_viz --save_animatio
 
 ### 6\. LingBotVisionNav: Navigation Sandbox on a Boundary-Centric Foundation Model
 
-**Description:** A sandbox for probing [LingBot-Vision](https://github.com/robbyant/lingbot-vision) — Robbyant / Ant Group's open-source *boundary-centric* vision foundation model (self-supervised ViT backbones pretrained with masked boundary modeling) — for capabilities relevant to **robot navigation**. Unlike semantic-invariant backbones, its frozen dense patch features stay spatially structured, making them strong for dense prediction. This project builds thin wrappers + demos on the frozen ViT-S/16 (CPU / Apple Silicon friendly) covering dense-feature PCA visualization, one-shot query object detection, unsupervised object proposals (KMeans), training-free point tracking, and a free-space / traversability steering cue.
+**Description:** A sandbox for probing [LingBot-Vision](https://github.com/robbyant/lingbot-vision) — Robbyant / Ant Group's open-source *boundary-centric* vision foundation model (self-supervised ViT backbones pretrained with masked boundary modeling) — for capabilities relevant to **robot navigation**. Unlike semantic-invariant backbones, its frozen dense patch features stay spatially structured, making them strong for dense prediction. This project builds thin wrappers + demos on the frozen ViT-S/16 (CPU / Apple Silicon friendly) covering dense-feature PCA visualization, one-shot query object detection, unsupervised object proposals (KMeans), and training-free point tracking (live webcam included).
 
 **Data Requirements:**
 - **Model Weights:** Auto-downloaded from Hugging Face on first run (~86 MB for the small variant), cached under `~/.cache/huggingface`
@@ -132,7 +132,7 @@ cd LingBotVisionNav
 ./setup.sh                                   # clone upstream backbone + install deps
 python demos.py pca    --input data/example.png
 python demos.py detect --input data/example.png --xy 256 256
-python demos.py nav    --input data/example.png
+python live.py                                   # live webcam
 ```
 
 [View Full Project](LingBotVisionNav/)

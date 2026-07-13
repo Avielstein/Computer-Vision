@@ -29,7 +29,9 @@ CPU / Apple Silicon.
 | One-shot object detection | `lbv_nav/object_discovery.py` | Point at a thing → find all regions like it (cosine match → boxes) |
 | Unsupervised object proposals | `lbv_nav/object_discovery.py` | KMeans over patch features → region proposals, no labels |
 | Training-free tracking | `lbv_nav/tracking.py` | Re-localize a point across frames by feature matching (no tracker training) |
-| Free-space / steer cue | `lbv_nav/navigation.py` | Feature-similarity traversability mask → forward-clearance profile → toy steer |
+
+> A `navigation.py` free-space / steering experiment also lives in the package
+> but is unwired from the demos for now.
 
 Everything consumes one primitive — a `[h, w, C]` dense feature grid from
 `lbv_nav.load(...).dense_features(image)`.
@@ -50,7 +52,6 @@ and cache under `~/.cache/huggingface`. Requires Python ≥ 3.10, torch ≥ 2.0.
 python demos.py pca      --input data/example.png
 python demos.py detect   --input data/example.png --xy 256 256    # click a pixel
 python demos.py cluster  --input data/example.png --k 6
-python demos.py nav      --input data/example.png
 python demos.py track    --frames data/frames --xy 256 256         # a folder of frames
 ```
 
@@ -69,7 +70,12 @@ python live.py --cam 1         # different camera index
 ```
 
 Keys (focus the video window): `1` pca · `2` detect (click an object) · `3`
-nav · `4` track (click a target) · `r` reset · `q`/ESC quit.
+track (click a target) · `r` reset · `space` start/stop recording · `q`/ESC
+quit.
+
+Press `space` to record the annotated view to a timestamped MP4 in `outputs/`
+(e.g. `outputs/live_track_20260713_143022.mp4`); press `space` again to stop. A
+red REC badge shows while recording (it is not baked into the saved file).
 
 CPU throughput of the small variant on this machine: **~14 fps @ size 256**,
 ~6 fps @ 384, ~3 fps @ 512. Lower `--size` for smoother live video; a CUDA GPU
@@ -90,12 +96,12 @@ print(len(res["boxes"]), "matching regions")
 
 ## Roadmap notes
 
-- **3D / metric depth for navigation**: LingBot-Vision is 2D. The clean next
-  step is to pair the same frozen features with **LingBot-Depth 2.0** to lift
-  the free-space cue in `navigation.py` from a 2D heuristic to a metric
-  point cloud / cost map. `navigation.py` marks that seam.
 - **Multi-object tracking**: `tracking.py` currently tracks a single point with
   a simple template update; extend to per-object mask propagation for MOT.
+- **Navigation (parked for now)**: `lbv_nav/navigation.py` holds an early
+  free-space / steering experiment, unwired from the demos. Reviving it and
+  pairing the frozen features with **LingBot-Depth 2.0** for metric 3D is the
+  natural path back to the "Nav" in the project name.
 
 ## Data
 

@@ -11,9 +11,9 @@ model only manages a few frames per second on CPU.
 Keys (focus the video window):
     1 pca      dense-feature PCA blended over the frame
     2 detect   click a pixel -> highlight everything with similar features
-    3 nav      free-space / traversability overlay + steer arrow
-    4 track    click an object -> follow it across frames (template update)
+    3 track    click an object -> follow it across frames (template update)
     r          reset the query point
+    space      start / stop recording an MP4 into outputs/
     q / ESC    quit
 
 macOS note: the terminal / VSCode running this needs Camera permission
@@ -26,13 +26,15 @@ from __future__ import annotations
 import argparse
 import threading
 import time
+from pathlib import Path
 
 import cv2
 import numpy as np
 
+OUT = Path(__file__).parent / "outputs"
+
 import lbv_nav
 from lbv_nav import features as F
-from lbv_nav import navigation as NAV
 from lbv_nav import object_discovery as OD
 
 # Shared state between the main (GUI) thread and the inference worker.
@@ -46,11 +48,10 @@ STATE = {
     "running": True,
 }
 LOCK = threading.Lock()
-MODE_KEYS = {ord("1"): "pca", ord("2"): "detect", ord("3"): "nav", ord("4"): "track"}
+MODE_KEYS = {ord("1"): "pca", ord("2"): "detect", ord("3"): "track"}
 LEGEND = {
     "pca": "PCA: similar stuff = similar color; watch edges pop",
     "detect": "DETECT: click something -> matches light up",
-    "nav": "NAV: point at a FLOOR/hallway, not your face",
     "track": "TRACK: click a target -> circle follows it",
 }
 
@@ -81,19 +82,6 @@ def _render(feats):
             out = F.overlay_heatmap(rgb, res["heat"], alpha=0.5)
             out = OD.draw_boxes(out, res["boxes"], color=(0, 255, 0), thickness=2)
             cv2.drawMarker(out, qxy, (255, 255, 255), cv2.MARKER_CROSS, 18, 2)
-
-    elif mode == "nav":
-        free, _ = NAV.free_space_mask(feats, sim_thresh=0.6)
-        clearance = NAV.obstacle_columns(free)
-        plan = NAV.steer_suggestion(clearance)
-        H, W = rgb.shape[:2]
-        free_up = F.upsample(free.astype(np.float32), (H, W), smooth=False) > 0.5
-        out = rgb.copy()
-        green = np.zeros_like(out); green[..., 1] = 255
-        out[free_up] = (0.55 * out[free_up] + 0.45 * green[free_up]).astype(np.uint8)
-        tip = int((plan["offset"] * 0.5 + 0.5) * W)
-        cv2.arrowedLine(out, (W // 2, H - 12), (tip, H - 70), (0, 0, 255), 4, tipLength=0.3)
-        cv2.putText(out, plan["action"], (10, 52), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
     elif mode == "track":
         out = rgb.copy()
@@ -162,14 +150,20 @@ def main():
     if not cap.isOpened():
         raise SystemExit(f"[live] could not open camera {args.cam} (check Camera permission on macOS)")
 
-    win = "LingBot-Vision live  [1]pca [2]detect [3]nav [4]track  r=reset q=quit"
+    win = "LingBot-Vision live  [1]pca [2]detect [3]track  r=reset SPACE=rec q=quit"
     cv2.namedWindow(win)
     cv2.setMouseCallback(win, _on_mouse)
 
     worker = threading.Thread(target=_worker, args=(bb, args.size), daemon=True)
     worker.start()
 
-    print("[live] running. Focus the window; press q or ESC to quit.")
+    writer = None          # cv2.VideoWriter while recording, else None
+    rec_path = None
+    rec_frames = 0
+    disp_fps = 20.0        # measured display rate, used as the recording fps
+    last = time.time()
+
+    print("[live] running. Focus the window; keys: 1-3 modes, r reset, SPACE record, q quit.")
     while True:
         ok, frame_bgr = cap.read()
         if not ok:
@@ -181,7 +175,12 @@ def main():
             disp = STATE["latest_disp"]
             ifps = STATE["infer_fps"]
 
-        if disp is None:  # first frames before the worker has produced anything
+        now = time.time()
+        disp_fps = 0.9 * disp_fps + 0.1 * (1.0 / max(now - last, 1e-6))
+        last = now
+
+        warming = disp is None
+        if warming:  # first frames before the worker has produced anything
             disp = frame_bgr.copy()
             cv2.putText(disp, "warming up...", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
         else:
@@ -189,7 +188,20 @@ def main():
             cv2.putText(disp, f"{STATE['mode']}  {ifps:4.1f} fps", (disp.shape[1] - 190, 24),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
-        cv2.imshow(win, disp)
+        # Write the clean annotated frame (no REC badge) to the recording.
+        if writer is not None:
+            writer.write(disp)
+            rec_frames += 1
+
+        # Draw the REC badge on the shown frame only.
+        shown = disp
+        if writer is not None:
+            shown = disp.copy()
+            cv2.circle(shown, (20, disp.shape[0] - 20), 8, (0, 0, 255), -1)
+            cv2.putText(shown, f"REC {rec_frames}", (36, disp.shape[0] - 13),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+
+        cv2.imshow(win, shown)
 
         key = cv2.waitKey(1) & 0xFF  # main loop spins at camera rate -> snappy keys
         if key in (ord("q"), 27):
@@ -200,7 +212,26 @@ def main():
         elif key == ord("r"):
             with LOCK:
                 STATE["query_xy"], STATE["query_vec"] = None, None
+        elif key == ord(" "):  # space toggles recording
+            if writer is None:
+                if warming:
+                    print("[live] still warming up; try again in a second")
+                else:
+                    OUT.mkdir(parents=True, exist_ok=True)
+                    rec_path = OUT / f"live_{STATE['mode']}_{time.strftime('%Y%m%d_%H%M%S')}.mp4"
+                    h, w = disp.shape[:2]
+                    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                    writer = cv2.VideoWriter(str(rec_path), fourcc, round(disp_fps, 1), (w, h))
+                    rec_frames = 0
+                    print(f"[live] ● recording -> {rec_path} @ {disp_fps:.0f} fps")
+            else:
+                writer.release()
+                print(f"[live] ■ saved {rec_path} ({rec_frames} frames)")
+                writer, rec_path, rec_frames = None, None, 0
 
+    if writer is not None:
+        writer.release()
+        print(f"[live] ■ saved {rec_path} ({rec_frames} frames)")
     STATE["running"] = False
     worker.join(timeout=1.0)
     cap.release()
