@@ -59,15 +59,33 @@ All demos write panels to `outputs/`. Add `--variant base|large|giant` and
 `--device cuda` on a GPU box; `--size` controls input resolution (snapped to a
 multiple of the patch size, 16).
 
-### Live webcam
+### Live / recorded / screen
 
-Run any mode on your webcam in real time:
+Run any mode in real time on a webcam, a recorded video file, or the screen —
+the input is picked with `--source`:
 
 ```bash
-python live.py                 # PCA feature view (default)
-python live.py --size 256      # smaller = faster
-python live.py --cam 1         # different camera index
+python live.py                              # webcam index 0 (default)
+python live.py --source 1                   # a different camera index
+python live.py --source clip.mp4            # a recorded video file
+python live.py --source clip.mp4 --loop     # ...replaying at the end
+python live.py --source screen              # whole primary screen
+python live.py --source screen:2            # a specific monitor
+python live.py --source screen:0,0,640,480  # a screen region (x,y,w,h)
+python live.py --region 0,0,640,480         # region via an explicit flag
+python live.py --size 256                   # smaller = faster
 ```
+
+`--cam N` still works as a back-compat alias for `--source N`. Screen capture is
+the easy way to run detection/tracking on **anything you can put on screen** —
+e.g. a YouTube clip playing in a browser — without downloading it or committing
+to a file format. It needs `mss` (installed by `setup.sh`) and, on macOS, Screen
+Recording permission (System Settings → Privacy & Security → **Screen
+Recording** for the terminal / VSCode). A silent all-black window usually means
+that permission is missing.
+
+Video files play at their native fps (override with `--fps`) and stop cleanly at
+the end unless you pass `--loop`.
 
 Keys (focus the video window): `1` pca · `2` detect (click an object) · `3`
 track (click a target) · `r` reset · `space` start/stop recording · `q`/ESC

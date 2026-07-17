@@ -14,3 +14,6 @@ scikit-learn>=1.1.0
 Pillow>=9.0.0
 imageio>=2.9.0
 matplotlib>=3.5.0
+# Screen-capture source for live.py (--source screen). Pure-Python (ctypes /
+# CoreGraphics on macOS), so it does NOT pull numpy 2 / opencv 5 -- pins hold.
+mss>=9.0.0

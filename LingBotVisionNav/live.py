@@ -1,12 +1,24 @@
-"""Live webcam demo for the LingBot-Vision navigation sandbox.
+"""Live demo for the LingBot-Vision navigation sandbox.
 
-Runs the frozen ViT-S/16 backbone on your webcam feed. Inference runs on a
-background thread so the window and keyboard stay responsive even though the
-model only manages a few frames per second on CPU.
+Runs the frozen ViT-S/16 backbone on a live *or* recorded feed. Inference runs
+on a background thread so the window and keyboard stay responsive even though
+the model only manages a few frames per second on CPU.
 
-    python live.py                 # default: PCA feature view
-    python live.py --size 256      # smaller = faster
-    python live.py --cam 1         # pick a different camera index
+The input is a flexible frame source (see ``lbv_nav/source.py``):
+
+    python live.py                            # webcam index 0 (default)
+    python live.py --source 1                 # a different camera index
+    python live.py --source clip.mp4          # a recorded video file
+    python live.py --source clip.mp4 --loop   # ...replaying at end
+    python live.py --source screen            # whole primary screen
+    python live.py --source screen:2          # a specific monitor
+    python live.py --source screen:0,0,640,480  # a screen region (x,y,w,h)
+    python live.py --region 0,0,640,480       # region via explicit flag
+    python live.py --size 256                 # smaller = faster
+
+Screen capture is a handy way to run detection/tracking on anything you can put
+on screen (e.g. a YouTube clip playing in a browser) without committing to a
+file format.
 
 Keys (focus the video window):
     1 pca      dense-feature PCA blended over the frame
@@ -16,9 +28,10 @@ Keys (focus the video window):
     space      start / stop recording an MP4 into outputs/
     q / ESC    quit
 
-macOS note: the terminal / VSCode running this needs Camera permission
-(System Settings -> Privacy & Security -> Camera). GUI calls (imshow/waitKey)
-stay on the main thread, as macOS requires.
+macOS note: the terminal / VSCode running this needs Camera permission for
+webcam sources and Screen Recording permission for screen sources (System
+Settings -> Privacy & Security). GUI calls (imshow/waitKey) stay on the main
+thread, as macOS requires.
 """
 
 from __future__ import annotations
@@ -36,6 +49,7 @@ OUT = Path(__file__).parent / "outputs"
 import lbv_nav
 from lbv_nav import features as F
 from lbv_nav import object_discovery as OD
+from lbv_nav.source import open_source, parse_region
 
 # Shared state between the main (GUI) thread and the inference worker.
 STATE = {
@@ -139,18 +153,27 @@ def main():
     ap.add_argument("--variant", default="small", choices=["small", "base", "large", "giant"])
     ap.add_argument("--device", default=None)
     ap.add_argument("--size", type=int, default=384, help="processing resolution (/16); lower = faster")
-    ap.add_argument("--cam", type=int, default=0, help="camera index")
+    ap.add_argument(
+        "--source",
+        default="0",
+        help="0/1=webcam index, path.mp4=video file, screen / screen:N / screen:x,y,w,h",
+    )
+    ap.add_argument("--cam", type=int, default=None, help="camera index (back-compat alias for --source)")
+    ap.add_argument("--monitor", type=int, default=None, help="screen source: monitor index (1=primary)")
+    ap.add_argument("--region", default=None, help="screen source: capture region 'x,y,w,h'")
+    ap.add_argument("--loop", action="store_true", help="video file: replay when it ends")
+    ap.add_argument("--fps", type=float, default=None, help="video file: override playback fps")
     args = ap.parse_args()
 
     print(f"[live] loading LingBot-Vision variant={args.variant} ...")
     bb = lbv_nav.load(variant=args.variant, device=args.device)
     print(f"[live] loaded: patch_size={bb.patch_size} embed_dim={bb.embed_dim} device={bb.device}")
 
-    cap = cv2.VideoCapture(args.cam)
-    if not cap.isOpened():
-        raise SystemExit(f"[live] could not open camera {args.cam} (check Camera permission on macOS)")
+    spec = str(args.cam) if args.cam is not None else args.source
+    src = open_source(spec, monitor=args.monitor, region=parse_region(args.region), loop=args.loop)
+    print(f"[live] source: kind={src.kind} live={src.is_live} fps={src.native_fps} size={src.size}")
 
-    win = "LingBot-Vision live  [1]pca [2]detect [3]track  r=reset SPACE=rec q=quit"
+    win = "LingBot-Vision  [1]pca [2]detect [3]track  r=reset SPACE=rec q=quit"
     cv2.namedWindow(win)
     cv2.setMouseCallback(win, _on_mouse)
 
@@ -165,11 +188,10 @@ def main():
 
     print("[live] running. Focus the window; keys: 1-3 modes, r reset, SPACE record, q quit.")
     while True:
-        ok, frame_bgr = cap.read()
-        if not ok:
-            print("[live] frame grab failed; stopping.")
+        rgb = src.read()
+        if rgb is None:  # only non-live (file) sources reach genuine end-of-stream
+            print("[live] end of stream; stopping.")
             break
-        rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         with LOCK:
             STATE["latest_frame"] = rgb
             disp = STATE["latest_disp"]
@@ -181,7 +203,7 @@ def main():
 
         warming = disp is None
         if warming:  # first frames before the worker has produced anything
-            disp = frame_bgr.copy()
+            disp = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
             cv2.putText(disp, "warming up...", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
         else:
             disp = disp.copy()
@@ -203,7 +225,15 @@ def main():
 
         cv2.imshow(win, shown)
 
-        key = cv2.waitKey(1) & 0xFF  # main loop spins at camera rate -> snappy keys
+        # Live sources spin at capture rate (snappy keys). File sources are paced
+        # toward their native fps so playback isn't a fast-forward -- but via
+        # waitKey (which still pumps the GUI + returns keys), never time.sleep.
+        if src.is_live:
+            wait_ms = 1
+        else:
+            target = 1.0 / (args.fps or src.native_fps or 30.0)
+            wait_ms = max(1, int((target - (time.time() - now)) * 1000))
+        key = cv2.waitKey(wait_ms) & 0xFF
         if key in (ord("q"), 27):
             break
         if key in MODE_KEYS:
@@ -221,9 +251,12 @@ def main():
                     rec_path = OUT / f"live_{STATE['mode']}_{time.strftime('%Y%m%d_%H%M%S')}.mp4"
                     h, w = disp.shape[:2]
                     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-                    writer = cv2.VideoWriter(str(rec_path), fourcc, round(disp_fps, 1), (w, h))
+                    # For files, use the true native fps so the clip's duration
+                    # matches the source; for live feeds use the measured rate.
+                    rec_fps = round(src.native_fps, 1) if (not src.is_live and src.native_fps) else round(disp_fps, 1)
+                    writer = cv2.VideoWriter(str(rec_path), fourcc, rec_fps, (w, h))
                     rec_frames = 0
-                    print(f"[live] ● recording -> {rec_path} @ {disp_fps:.0f} fps")
+                    print(f"[live] ● recording -> {rec_path} @ {rec_fps:.0f} fps")
             else:
                 writer.release()
                 print(f"[live] ■ saved {rec_path} ({rec_frames} frames)")
@@ -234,7 +267,7 @@ def main():
         print(f"[live] ■ saved {rec_path} ({rec_frames} frames)")
     STATE["running"] = False
     worker.join(timeout=1.0)
-    cap.release()
+    src.close()
     cv2.destroyAllWindows()
 
 
